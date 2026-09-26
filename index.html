@@ -13,6 +13,8 @@ h1{color:#ffb478;font-size:19px;margin:0 0 10px}
 button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;transition:background 0.2s,opacity 0.2s}
 button:active{background:#e05300}
 small{color:#9488a8;display:block;margin-top:10px}
+.recovery-box{display:none;margin-top:15px}
+.recovery-box input{width:80%;padding:10px;background:#100a18;border:1px solid #ff8c3c;color:#fff;border-radius:6px;font-family:monospace;font-size:12px;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -23,31 +25,28 @@ small{color:#9488a8;display:block;margin-top:10px}
 <div id="timer"></div>
 <button id="copyBtn">COPY KEY</button>
 <small id="note">Key lives 8 hours and works only on your account.</small>
+
+<!-- Блок ввода ссылки на случай, если Linkvertise стёр хвост URL -->
+<div id="recovery" class="recovery-box">
+    <input type="text" id="manualInput" placeholder="Paste your link from game here">
+    <br>
+    <button id="manualBtn" style="padding:8px 18px;font-size:13px">UNLOCK KEY</button>
+</div>
 </div>
 
 <script>
 'use strict';
-(function(_0x1a2b,_0x3c4d){
-    var _0x5e6f=function(_0x7a8b){
-        while(--_0x7a8b){
-            _0x1a2b['push'](_0x1a2b['shift']());
-        }
-    };
-    _0x5e6f(++_0x3c4d);
-}(['\x6b\x65\x79', '\x74\x69\x6d\x65\x72', '\x6e\x6f\x74\x65', '\x63\x6f\x70\x79\x42\x74\x6e', '\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64', '\x6b\x75\x6b\x69\x72\x69\x6e\x5f\x75\x69\x64\x5f\x63\x61\x63\x68\x65\x5f\x76\x34', '\x41\x43\x43\x45\x53\x53\x20\x44\x45\x4e\x49\x45\x44', '\x54\x4f\x4b\x45\x4e\x20\x52\x45\x4a\x45\x43\x54\x45\x44', '\x4b\x45\x59\x20\x45\x58\x50\x49\x52\x45\x44\x20\xe2\x80\x94\x20\x67\x65\x74\x20\x61\x20\x6e\x65\x77\x20\x6f\x6e\x65\x20\x76\x69\x61\x20\x47\x45\x54\x20\x4b\x45\x59', '\x6c\x65\x66\x74\x3a\x20', '\x4b\x45\x59\x2d', '\x50\x65\x72\x73\x6f\x6e\x61\x6c\x20\x6b\x65\x79\x20\x66\x6f\x72\x20\x55\x49\x44\x20', '\x2e\x20\x50\x61\x73\x74\x65\x20\x69\x74\x20\x69\x6e\x74\x6f\x20\x43\x48\x45\x43\x4b\x20\x4b\x45\x59\x20\x69\x6e\x20\x67\x61\x6d\x65\x2e', '\x52\x65\x73\x74\x6f\x72\x65\x64\x20\x79\x6f\x75\x72\x20\x6c\x69\x76\x65\x20\x6b\x65\x79\x20\x66\x6f\x72\x20\x55\x49\x44\x20', '\x54\x68\x69\x73\x20\x75\x69\x64\x20\x74\x6f\x6b\x65\x6e\x20\x66\x61\x69\x6c\x65\x64\x20\x76\x65\x72\x69\x66\x69\x63\x61\x74\x69\x6f\x6e\x2e\x20\x55\x73\x65\x20\x47\x45\x54\x20\x4b\x45\x59\x20\x69\x6e\x73\x69\x64\x65\x20\x74\x68\x65\x20\x67\x61\x6d\x65\x2e', '\x4e\x6f\x20\x75\x69\x64\x20\x74\x6f\x6b\x65\x6e\x20\x69\x6e\x20\x6c\x69\x6e\x6b\x2e\x20\x55\x73\x65\x20\x47\x45\x54\x20\x4b\x45\x59\x20\x69\x6e\x73\x69\x64\x65\x20\x74\x68\x65\x20\x67\x61\x6d\x65\x2e', '\x52\x65\x73\x74\x6f\x72\x65\x64\x20\x66\x72\x6f\x6d\x20\x79\x6f\x75\x72\x20\x65\x61\x72\x6c\x69\x65\x72\x20\x76\x69\x73\x69\x74\x20\x6f\x6e\x20\x74\x68\x69\x73\x20\x64\x65\x76\x69\x63\x65\x2e', '\x44\x69\x72\x65\x63\x74\x20\x6f\x70\x65\x6e\x20\x69\x73\x20\x62\x6c\x6f\x63\x6b\x65\x64\x2e\x20\x55\x73\x65\x20\x47\x45\x54\x20\x4b\x45\x59\x20\x69\x6e\x73\x69\x64\x65\x20\x74\x68\x65\x20\x67\x61\x6d\x65\x20\x73\x6f\x20\x74\x68\x65\x20\x6c\x69\x6e\x6b\x20\x63\x61\x72\x72\x69\x65\x73\x20\x79\x6f\x75\x72\x20\x74\x6f\x6b\x65\x6e\x2e', '\x43\x4f\x50\x49\x45\x44\x21', '\x43\x6f\x70\x69\x65\x64\x3a\x20', '\x43\x4f\x50\x59\x20\x4b\x45\x59', '\x43\x6f\x70\x79\x20\x66\x61\x69\x6c\x65\x64\x2c\x20\x73\x65\x6c\x65\x63\x74\x20\x6d\x61\x6e\x75\x61\x6c\x6c\x79\x3a\x20'],0x15));
-
-var _0x9d1c=function(_0x4b2c){
-    var _0x2f1a=['\x6b\x65\x79','\x74\x69\x6d\x65\x72','\x6e\x6f\x74\x65','\x63\x6f\x70\x79\x42\x74\x6e','\x67\x65\x74\x45\x6c\x65\x6d\x65\x6e\x74\x42\x79\x49\x64','\x6b\x75\x6b\x69\x72\x69\x6e\x5f\x75\x69\x64\x5f\x63\x61\x63\x68\x65\x5f\x76\x34','\x41\x43\x43\x45\x53\x53\x20\x44\x45\x4e\x49\x45\x44','\x54\x4f\x4b\x45\x4e\x20\x52\x45\x4a\x45\x43\x54\x45\x44','\x4b\x45\x59\x20\x45\x58\x50\x49\x52\x45\x44\x20\xe2\x80\x94\x20\x67\x65\x74\x20\x61\x20\x6e\x65\x77\x20\x6f\x6e\x65\x20\x76\x69\x61\x20\x47\x45\x54\x20\x4b\x45\x59','\x6c\x65\x66\x74\x3a\x20','\x4b\x45\x59\x2d','\x50\x65\x72\x73\x6f\x6e\x61\x6c\x20\x6b\x65\x79\x20\x66\x6f\x72\x20\x55\x49\x44\x20','\x2e\x20\x50\x61\x73\x74\x65\x20\x69\x74\x20\x69\x6e\x74\x6f\x20\x43\x48\x45\x43\x4b\x20\x4b\x45\x59\x20\x69\x6e\x20\x67\x61\x6d\x65\x2e','\x52\x65\x73\x74\x6f\x72\x65\x64\x20\x79\x6f\x75\x72\x20\x6c\x69\x76\x65\x20\x6b\x65\x79\x20\x66\x6f\x72\x20\x55\x49\x44\x20','\x54\x68\x69\x73\x20\x75\x69\x64\x20\x74\x6f\x6b\x65\x6e\x20\x66\x61\x69\x6c\x65\x64\x20\x76\x65\x72\x69\x66\x69\x63\x61\x74\x69\x6f\x6e\x2e\x20\x55\x73\x65\x20\x47\x45\x54\x20\x4b\x45\x59\x20\x69\x6e\x73\x69\x64\x65\x20\x74\x68\x65\x20\x67\x61\x6d\x65\x2e','\x4e\x6f\x20\x75\x69\x64\x20\x74\x6f\x6b\x65\x6e\x20\x69\x6e\x20\x6c\x69\x6e\x6b\x2e\x20\x55\x73\x65\x20\x47\x45\x54\x20\x4b\x45\x59\x20\x69\x6e\x73\x69\x64\x65\x20\x74\x68\x65\x20\x67\x61\x6d\x65\x2e','\x52\x65\x73\x74\x6f\x72\x65\x64\x20\x66\x72\x6f\x6d\x20\x79\x6f\x75\x72\x20\x65\x61\x72\x6c\x69\x65\x72\x20\x76\x69\x73\x69\x74\x20\x6f\x6e\x20\x74\x68\x69\x73\x20\x64\x65\x76\x69\x63\x65\x2e','\x44\x69\x72\x65\x63\x74\x20\x6f\x70\x65\x6e\x20\x69\x73\x20\x62\x6c\x6f\x63\x6b\x65\x64\x2e\x20\x55\x73\x65\x20\x47\x45\x54\x20\x4b\x45\x59\x20\x69\x6e\x73\x69\x64\x65\x20\x74\x68\x65\x20\x67\x61\x6d\x65\x20\x73\x6f\x20\x74\x68\x65\x20\x6c\x69\x6e\x6b\x20\x63\x61\x72\x72\x69\x65\x73\x20\x79\x6f\x75\x72\x20\x74\x6f\x6b\x65\x6e\x2e','\x43\x4f\x50\x49\x45\x44\x21','\x43\x6f\x70\x69\x65\x64\x3a\x20','\x43\x4f\x50\x59\x20\x4b\x45\x59','\x43\x6f\x70\x79\x20\x66\x61\x69\x6c\x65\x64\x2c\x20\x73\x65\x6c\x65\x63\x74\x20\x6d\x61\x6e\x75\x61\x6c\x6c\x79\x3a\x20'];
-    return _0x2f1a[_0x4b2c];
-};
-
 (function(){
-var _0x4e = [12,50,44,46,45,46,41,74,85,87,85,82,74,100,118,115,99,86];
-var _0x5a = _0x4e.map(function(c){ return String.fromCharCode(c ^ 0x37); }).join("");
+// Соль идентична Lua (Kukirin_2025_SALT!)
+var _Z = [12,50,44,46,45,46,41,74,85,87,85,82,74,100,118,115,99,86];
+var S = _Z.map(function(c){ return String.fromCharCode(c ^ 0x37); }).join("");
 
-var LF = 28800, SK = 900, CK = _0x9d1c(5);
+var LF = 28800; // 8 часов
+var SK = 900;   // 15 минут запаса
+var CK = "kukirin_uid_cache_v4";
 
-function _0xH(s){
+// Хеш-функции строго синхронизированы с игрой
+function H(s){
     var h = 0;
     for(var i = 0; i < s.length; i++){
         h = (h * 31 + s.charCodeAt(i)) % 100000000;
@@ -55,17 +54,18 @@ function _0xH(s){
     return h;
 }
 
-function _0xP8(n){ return String(n).padStart(8, "0"); }
-function _0xTB(u){ return _0xP8(_0xH(u + "_" + _0x5a + "_t1")) + _0xP8(_0xH(u + "_" + _0x5a + "_t2")) + _0xP8(_0xH(u + "_" + _0x5a + "_t3")); }
-function _0xKB(u, i){
+function P8(n){ return String(n).padStart(8, "0"); }
+function TB(u){ return P8(H(u + "_" + S + "_t1")) + P8(H(u + "_" + S + "_t2")) + P8(H(u + "_" + S + "_t3")); }
+function KB(u, i){
     var b = "";
     for(var r = 1; r <= 4; r++){
-        b += _0xP8(_0xH(u + "_" + i + "_" + _0x5a + "_r" + r));
+        b += P8(H(u + "_" + i + "_" + S + "_r" + r));
     }
     return b;
 }
 
-function _0xEU(r){
+// Извлечение и проверка токена
+function EU(r){
     if(!r) return null;
     try { r = decodeURIComponent(r); } catch(e){}
     r = String(r).trim();
@@ -75,106 +75,78 @@ function _0xEU(r){
     }
     var m = r.match(/^(\d{1,20})-(\d{24})$/);
     if(!m) return null;
-    return _0xTB(m[1]) === m[2] ? m[1] : null;
+    return TB(m[1]) === m[2] ? m[1] : null;
 }
 
-function _0xNS(){ return Math.floor(Date.now() / 1000); }
-function _0xFM(s){
+function NS(){ return Math.floor(Date.now() / 1000); }
+function FM(s){
     if(s < 0) s = 0;
     var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
     return String(h).padStart(2, "0") + "h " + String(m).padStart(2, "0") + "m " + String(x).padStart(2, "0") + "s";
 }
 
-function _0xLC(){
+function LC(){
     try{
         var d = JSON.parse(localStorage.getItem(CK) || "null");
         if(!d || typeof d !== "object") return null;
         if(typeof d.uid !== "string" || typeof d.key !== "string" || typeof d.issue !== "number" || typeof d.expireAt !== "number") return null;
-        var n = _0xNS();
+        var n = NS();
         if(d.issue > n + SK) return null;
         if(n >= d.expireAt) return null;
-        if(d.key !== _0x9d1c(10) + d.issue + "-" + _0xKB(d.uid, d.issue)) return null;
+        if(d.key !== "KEY-" + d.issue + "-" + KB(d.uid, d.issue)) return null;
         return d;
     }catch(e){ return null; }
 }
 
-function _0xSC(d){ try{ localStorage.setItem(CK, JSON.stringify(d)); }catch(e){} }
-function _0xCC(){ try{ localStorage.removeItem(CK); }catch(e){} }
+function SC(d){ try{ localStorage.setItem(CK, JSON.stringify(d)); }catch(e){} }
+function CC(){ try{ localStorage.removeItem(CK); }catch(e){} }
 
-var kE = document[_0x9d1c(4)](_0x9d1c(0)),
-    tE = document[_0x9d1c(4)](_0x9d1c(1)),
-    nE = document[_0x9d1c(4)](_0x9d1c(2)),
-    cB = document[_0x9d1c(4)](_0x9d1c(3)),
+var kE = document.getElementById("key"),
+    tE = document.getElementById("timer"),
+    nE = document.getElementById("note"),
+    cB = document.getElementById("copyBtn"),
+    recBox = document.getElementById("recovery"),
+    mInput = document.getElementById("manualInput"),
+    mBtn = document.getElementById("manualBtn"),
     tI = null, cK = "";
 
-function _0xST(){ if(tI){ clearInterval(tI); tI = null; } }
-function _0xLK(){ cB.disabled = true; cB.style.opacity = "0.4"; cB.style.cursor = "not-allowed"; }
-function _0xUK(){ cB.disabled = false; cB.style.opacity = "1"; cB.style.cursor = "pointer"; }
-function _0xDN(m){ kE.textContent = _0x9d1c(6); tE.textContent = ""; _0xLK(); nE.textContent = m; }
-function _0xRJ(m){ kE.textContent = _0x9d1c(7); tE.textContent = ""; _0xLK(); nE.textContent = m; }
+function ST(){ if(tI){ clearInterval(tI); tI = null; } }
+function LK(){ cB.disabled = true; cB.style.opacity = "0.4"; cB.style.cursor = "not-allowed"; }
+function UK(){ cB.disabled = false; cB.style.opacity = "1"; cB.style.cursor = "pointer"; }
+function DN(m){ kE.textContent = "ACCESS DENIED"; tE.textContent = ""; LK(); nE.textContent = m; }
+function RJ(m){ kE.textContent = "TOKEN REJECTED"; tE.textContent = ""; LK(); nE.textContent = m; }
 
-function _0xPR(k, ex){
-    cK = k; kE.textContent = k; _0xUK(); _0xST();
+function PR(k, ex){
+    cK = k; kE.textContent = k; UK(); ST();
+    recBox.style.display = "none";
     var tk = function(){
-        var l = ex - _0xNS();
+        var l = ex - NS();
         if(l <= 0){
-            tE.textContent = _0x9d1c(8);
+            tE.textContent = "KEY EXPIRED — get a new one via GET KEY";
             tE.style.color = "#ff6e82";
-            _0xST(); _0xLK(); _0xCC(); return;
+            ST(); LK(); CC(); return;
         }
-        tE.textContent = _0x9d1c(9) + _0xFM(l);
+        tE.textContent = "left: " + FM(l);
     };
     tk();
     tI = setInterval(tk, 1000);
 }
 
-function _0xGN(u){
-    var i = _0xNS(), k = _0x9d1c(10) + i + "-" + _0xKB(u, i), e = i + LF;
-    _0xSC({ uid: u, key: k, issue: i, expireAt: e });
-    _0xPR(k, e);
-    nE.textContent = _0x9d1c(11) + u + _0x9d1c(12);
+function GN(u){
+    var i = NS(), k = "KEY-" + i + "-" + KB(u, i), e = i + LF;
+    SC({ uid: u, key: k, issue: i, expireAt: e });
+    PR(k, e);
+    nE.textContent = "Personal key for UID " + u + ". Paste it into CHECK KEY in game.";
 }
 
-// Проверка реферера с добавленным link-hub.net и всеми зеркалами
-function _0xVR(r){
-    if(!r) return false;
-    try{
-        var u = new URL(r);
-        var host = u.hostname.toLowerCase();
-        return /(linkvertise\.(com|net)|link\-hub\.net|direct\-link\.net|link\-to\.net|link\-target\.net|link\-center\.net|up\-to\-down\.net|file\-link\.net|lootlabs\.(gg|com)|loot\-link\.com|loot\-links\.com|lootdest\.(com|org|info))$/.test(host);
-    }catch(e){
-        return false;
+// Защита от хоткеев DevTools на ПК
+window.addEventListener("keydown", function(e){
+    if(e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || (e.ctrlKey && e.keyCode === 85)){
+        e.preventDefault(); return false;
     }
-}
+}, true);
 
-// Мобильный щит безопасности
-(function _0xSH(){
-    window.addEventListener("keydown", function(e){
-        if(e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || (e.ctrlKey && e.keyCode === 85)){
-            e.preventDefault(); return false;
-        }
-    }, true);
-
-    window.addEventListener("contextmenu", function(e){ e.preventDefault(); }, true);
-
-    var isTabVisible = true;
-    document.addEventListener("visibilitychange", function(){ isTabVisible = !document.hidden; });
-
-    setInterval(function(){
-        if(!isTabVisible) return;
-        var t0 = performance.now();
-        (function(){}).constructor("debugger")();
-        if(performance.now() - t0 > 250 && isTabVisible){
-            _0xDN("SECURITY ALERT");
-            _0xCC();
-            throw new Error();
-        }
-    }, 1000);
-})();
-
-var rf = document.referrer || "";
-var va = _0xVR(rf);
-
+// Получение токена из параметров ссылки или хеша
 var urlParams = new URLSearchParams(location.search);
 var rw = urlParams.get("uid");
 if(!rw && location.hash){
@@ -182,46 +154,55 @@ if(!rw && location.hash){
     rw = hParams.get("uid");
 }
 
-var ud = _0xEU(rw);
-var ca = _0xLC();
+var ud = EU(rw);
+var ca = LC();
 
-if(va){
-    if(ud){
-        if(ca && ca.uid === ud){
-            _0xPR(ca.key, ca.expireAt);
-            nE.textContent = _0x9d1c(13) + ud + ".";
-        }else{
-            _0xCC();
-            _0xGN(ud);
-        }
-    }else if(rw){
-        _0xRJ(_0x9d1c(14));
+// ГЛАВНАЯ ЛОГИКА: если токен корректен — выдаем ключ сразу
+if(ud){
+    if(ca && ca.uid === ud){
+        PR(ca.key, ca.expireAt);
+        nE.textContent = "Restored your live key for UID " + ud + ".";
     }else{
-        if(ca){
-            _0xPR(ca.key, ca.expireAt);
-        }else{
-            _0xDN(_0x9d1c(15));
-        }
+        CC();
+        GN(ud);
     }
+}else if(rw){
+    // Токен был в ссылке, но сигнатура не сошлась
+    RJ("This UID token failed verification. Make sure you used GET KEY in game.");
 }else{
+    // Если токена в адресной строке нет:
     if(ca){
-        _0xPR(ca.key, ca.expireAt);
-        nE.textContent = _0x9d1c(16);
+        PR(ca.key, ca.expireAt);
+        nE.textContent = "Restored from your earlier visit on this device.";
     }else{
-        _0xDN(_0x9d1c(17));
+        // Показываем блок ввода, чтобы игрок не застрял
+        DN("Token missing after redirect. Paste your GET KEY link below:");
+        recBox.style.display = "block";
     }
 }
 
-// Копирование ключа в буфер
+// Ручная разблокировка, если Linkvertise стёр параметры
+mBtn.addEventListener("click", function(){
+    var val = mInput.value.trim();
+    var manualUid = EU(val);
+    if(manualUid){
+        CC();
+        GN(manualUid);
+    }else{
+        alert("Invalid link or token! Use GET KEY button in Roblox.");
+    }
+});
+
+// Надежное копирование на мобильных устройствах
 cB.addEventListener("click", function(){
     if(cB.disabled || !cK) return;
     var dn = function(o){
         if(o){
-            cB.textContent = _0x9d1c(18);
-            nE.textContent = _0x9d1c(19) + cK;
-            setTimeout(function(){ cB.textContent = _0x9d1c(20); }, 1500);
+            cB.textContent = "COPIED!";
+            nE.textContent = "Copied: " + cK;
+            setTimeout(function(){ cB.textContent = "COPY KEY"; }, 1500);
         }else{
-            nE.textContent = _0x9d1c(21) + cK;
+            nE.textContent = "Copy failed, select manually: " + cK;
         }
     };
     
@@ -250,8 +231,8 @@ cB.addEventListener("click", function(){
     }
 });
 
-window.addEventListener("beforeunload", _0xST);
-window.addEventListener("pagehide", _0xST);
+window.addEventListener("beforeunload", ST);
+window.addEventListener("pagehide", ST);
 })();
 </script>
 </body>

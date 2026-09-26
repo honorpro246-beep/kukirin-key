@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kukirin Key 8h</title>
+<title>Kukirin Key</title>
 <style>
 body{background:#180f24;color:#ebe4f5;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;margin:0}
 .box{background:#241036;padding:32px;border-radius:14px;border:2px solid #ff8c3c;text-align:center;max-width:460px;width:90%}
 h1{color:#ffb478;font-size:19px;margin:0 0 10px}
-#key{font-size:16px;letter-spacing:1px;background:#100a18;padding:14px;border-radius:8px;margin:14px 0;word-break:break-all}
+#key{font-size:15px;letter-spacing:1px;background:#100a18;padding:14px;border-radius:8px;margin:14px 0;word-break:break-all}
 #timer{color:#6effa2;font-size:14px;margin-bottom:12px}
 button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer}
 small{color:#9488a8;display:block;margin-top:10px}
@@ -21,187 +21,30 @@ small{color:#9488a8;display:block;margin-top:10px}
 <div id="key">...</div>
 <div id="timer"></div>
 <button id="copyBtn">COPY KEY</button>
-<small id="note">Key lives 8 hours from issue and is bound to your UID.</small>
+<small id="note">Key lives 8 hours, bound to your UID.</small>
 </div>
 <script>
 'use strict';
 (function(){
-
-var SALT = String.fromCharCode(75,117,107,105,114,105,110,95,50,48,50,53,95,83,65,76,84,33);
-var LIFE = 8 * 3600;
-var SKEW = 300;
-var STORAGE_KEY = "kukirin_key_cache_big";
-
-function hashOf(s){
-    var h = 0;
-    for (var i = 0; i < s.length; i++){
-        h = (h * 31 + s.charCodeAt(i)) % 100000000;
-    }
-    return h;
-}
-function pad8(n){ return String(n).padStart(8, "0"); }
-
-function tokenBody(uidStr){
-    return pad8(hashOf(uidStr + "_" + SALT + "_t1")) +
-           pad8(hashOf(uidStr + "_" + SALT + "_t2")) +
-           pad8(hashOf(uidStr + "_" + SALT + "_t3"));
-}
-function extractUid(raw){
-    if (!raw) return null;
-    raw = String(raw).trim();
-    var i = raw.lastIndexOf("uid=");
-    if (i >= 0){
-        raw = raw.slice(i + 4);
-        var j = raw.indexOf("&");
-        if (j >= 0) raw = raw.slice(0, j);
-        raw = raw.trim();
-    }
-    var m = raw.match(/^(\d{1,20})-(\d{24})$/);
-    if (!m) return null;
-    if (tokenBody(m[1]) !== m[2]) return null;
-    return m[1];
-}
-function keyBody(uidStr, issue){
-    var b = "";
-    for (var r = 1; r <= 4; r++){
-        b += pad8(hashOf(uidStr + "_" + issue + "_" + SALT + "_" + r));
-    }
-    return b;
-}
-function nowSec(){ return Math.floor(Date.now() / 1000); }
-function formatTime(sec){
-    var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
-    return String(h).padStart(2,"0") + "h " + String(m).padStart(2,"0") + "m " + String(s).padStart(2,"0") + "s";
-}
-
-function loadCached(uid){
-    try {
-        var raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return null;
-        var d = JSON.parse(raw);
-        if (typeof d !== "object" || d === null) return null;
-        if (d.uid !== uid) return null;
-        if (typeof d.key !== "string" || typeof d.issue !== "number" || typeof d.expireAt !== "number") return null;
-        var now = nowSec();
-        if (d.issue > now + SKEW) return null;
-        if (now >= d.expireAt) return null;
-        if (d.key !== "KEY-" + d.issue + "-" + keyBody(uid, d.issue)) return null;
-        return d;
-    } catch(e){ return null; }
-}
-function saveCached(uid, key, issue, expireAt){
-    try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify({ uid: uid, key: key, issue: issue, expireAt: expireAt }));
-    } catch(e){}
-}
-function clearCached(){
-    try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
-}
-
-var keyEl = document.getElementById("key");
-var timerEl = document.getElementById("timer");
-var noteEl = document.getElementById("note");
-var copyBtn = document.getElementById("copyBtn");
-var timerInterval = null;
-var currentKeyText = "";
-
-function stopTimer(){ if (timerInterval){ clearInterval(timerInterval); timerInterval = null; } }
-function disableCopy(){ copyBtn.disabled = true; copyBtn.style.opacity = "0.4"; copyBtn.style.cursor = "not-allowed"; }
-function enableCopy(){ copyBtn.disabled = false; copyBtn.style.opacity = "1"; copyBtn.style.cursor = "pointer"; }
-function startTimer(expireAt){
-    stopTimer();
-    var tick = function(){
-        var left = expireAt - nowSec();
-        if (left <= 0){
-            timerEl.textContent = "KEY EXPIRED — refresh for a new one";
-            timerEl.style.color = "#ff6e82";
-            stopTimer();
-            return;
-        }
-        timerEl.textContent = "left: " + formatTime(left);
-    };
-    tick();
-    timerInterval = setInterval(tick, 1000);
-}
-function presentKey(key, expireAt){
-    currentKeyText = key;
-    keyEl.textContent = key;
-    enableCopy();
-    startTimer(expireAt);
-}
-function generateFor(uid){
-    var issue = nowSec();
-    var key = "KEY-" + issue + "-" + keyBody(uid, issue);
-    var expireAt = issue + LIFE;
-    saveCached(uid, key, issue, expireAt);
-    presentKey(key, expireAt);
-}
-
-var rawParam = new URLSearchParams(location.search).get("uid");
-var uid = extractUid(rawParam);
-
-if (uid){
-    var cached = loadCached(uid);
-    if (cached){
-        presentKey(cached.key, cached.expireAt);
-    } else {
-        clearCached();
-        generateFor(uid);
-    }
-} else if (rawParam){
-    keyEl.textContent = "TOKEN REJECTED";
-    timerEl.textContent = "";
-    disableCopy();
-    noteEl.textContent = "This uid token failed verification. Use GET KEY inside the game to get a valid link.";
-} else {
-    keyEl.textContent = "ACCESS DENIED";
-    timerEl.textContent = "";
-    disableCopy();
-    noteEl.textContent = "No uid token in the link. Open this page via GET KEY button inside the game — the loader puts your personal token into the link.";
-}
-
-function fallbackCopy(t){
-    var ta = document.createElement("textarea");
-    ta.value = t;
-    ta.style.position = "fixed";
-    ta.style.opacity = "0";
-    ta.style.fontSize = "16px";
-    ta.setAttribute("readonly", "");
-    document.body.appendChild(ta);
-    ta.select();
-    ta.setSelectionRange(0, t.length);
-    var ok = false;
-    try { ok = document.execCommand("copy"); } catch(e){ ok = false; }
-    document.body.removeChild(ta);
-    return ok;
-}
-
-copyBtn.addEventListener("click", function(){
-    if (copyBtn.disabled) return;
-    var t = currentKeyText;
-    if (!t || t === "...") return;
-    var done = function(ok){
-        if (ok){
-            copyBtn.textContent = "COPIED!";
-            noteEl.textContent = "Copied: " + t;
-            setTimeout(function(){ copyBtn.textContent = "COPY KEY"; }, 1500);
-        } else {
-            noteEl.textContent = "Copy failed, select manually: " + t;
-        }
-    };
-    if (navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(t).then(
-            function(){ done(true); },
-            function(){ done(fallbackCopy(t)); }
-        );
-    } else {
-        done(fallbackCopy(t));
-    }
-});
-
-window.addEventListener("beforeunload", stopTimer);
-window.addEventListener("pagehide", stopTimer);
-
+var P=[75,117,107,105,114,105,110,95,50,48,50,53,95,83,65,76,84,33];
+var S=P.map(function(c){return String.fromCharCode(c)}).join("");
+var L=28800,K="kukirin_key_v2";
+function H(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))%100000000}return h}
+function P8(n){return String(n).padStart(8,"0")}
+function T(u){var b="";for(var r=1;r<=4;r++){b+=P8(H(u+"_"+L+"_"+S+"_"+r))}return b}
+function V(r){if(!r)return null;r=String(r).trim();var i=r.lastIndexOf("uid=");if(i>=0){r=r.slice(i+4);var j=r.indexOf("&");if(j>=0)r=r.slice(0,j);r=r.trim()}var m=r.match(/^(\d{1,20})-(\d{24})$/);if(!m)return null;var c="";for(var x=1;x<=3;x++){c+=P8(H(m[1]+"_"+S+"_t"+x))}return c===m[2]?m[1]:null}
+function F(s){var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return String(h).padStart(2,"0")+"h "+String(m).padStart(2,"0")+"m "+String(x).padStart(2,"0")+"s"}
+var kE=document.getElementById("key"),tE=document.getElementById("timer"),nE=document.getElementById("note"),cB=document.getElementById("copyBtn"),tI=null,cK="";
+function S1(){if(tI){clearInterval(tI);tI=null}}
+function D1(){cB.disabled=true;cB.style.opacity="0.4";cB.style.cursor="not-allowed"}
+function E1(){cB.disabled=false;cB.style.opacity="1";cB.style.cursor="pointer"}
+function G(u){var i=Math.floor(Date.now()/1000),k="KEY-"+i+"-"+T(u),e=i+L;try{localStorage.setItem(K,JSON.stringify({u:u,k:k,i:i,e:e}))}catch(x){}cK=k;kE.textContent=k;E1();var tk=function(){var l=e-Math.floor(Date.now()/1000);if(l<=0){tE.textContent="KEY EXPIRED — refresh";tE.style.color="#ff6e82";S1();return}tE.textContent="left: "+F(l)};tk();tI=setInterval(tk,1000)}
+var u=V(new URLSearchParams(location.search).get("uid"));
+if(u){var c=null;try{c=JSON.parse(localStorage.getItem(K)||"null");if(c&&c.u===u&&c.e>Math.floor(Date.now()/1000)&&c.k==="KEY-"+c.i+"-"+T(u)){cK=c.k;kE.textContent=c.k;E1();var tk2=function(){var l=c.e-Math.floor(Date.now()/1000);if(l<=0){tE.textContent="KEY EXPIRED";tE.style.color="#ff6e82";S1();return}tE.textContent="left: "+F(l)};tk2();tI=setInterval(tk2,1000)}else G(u)}catch(x){G(u)}}
+else{kE.textContent="ACCESS DENIED";tE.textContent="";D1();nE.textContent="No valid uid token. Open this page via GET KEY button in the game."}
+cB.addEventListener("click",function(){if(cB.disabled||!cK)return;var d=function(o){if(o){cB.textContent="COPIED!";nE.textContent="Copied: "+cK;setTimeout(function(){cB.textContent="COPY KEY"},1500)}else nE.textContent="Copy failed: "+cK};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cK).then(function(){d(true)},function(){var ta=document.createElement("textarea");ta.value=cK;ta.style.cssText="position:fixed;opacity:0;font-size:16px";ta.setAttribute("readonly","");document.body.appendChild(ta);ta.select();var o=false;try{o=document.execCommand("copy")}catch(x){}document.body.removeChild(ta);d(o)})}else{var ta=document.createElement("textarea");ta.value=cK;ta.style.cssText="position:fixed;opacity:0;font-size:16px";ta.setAttribute("readonly","");document.body.appendChild(ta);ta.select();var o=false;try{o=document.execCommand("copy")}catch(x){}document.body.removeChild(ta);d(o)}});
+window.addEventListener("beforeunload",S1);
+window.addEventListener("pagehide",S1);
 })();
 </script>
 </body>

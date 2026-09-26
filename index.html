@@ -12,6 +12,7 @@ h1{color:#ffb478;font-size:19px;margin:0 0 10px}
 #timer{color:#6effa2;font-size:14px;margin-bottom:12px}
 button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer}
 small{color:#9488a8;display:block;margin-top:10px}
+input{width:70%;padding:10px;border-radius:8px;border:0;background:#100a18;color:#ebe4f5;font-family:monospace;font-size:16px}
 </style>
 </head>
 <body>
@@ -48,7 +49,7 @@ function keyBody(uid, issue){
 }
 function validateUid(uid){
     if (!uid) return null;
-    uid = uid.trim();
+    uid = String(uid).trim();
     if (uid.length === 0 || uid.length > 32) return null;
     if (!/^[a-zA-Z0-9_-]+$/.test(uid)) return null;
     return uid;
@@ -98,30 +99,13 @@ function disableCopy(){
     copyBtn.style.opacity = "0.4";
     copyBtn.style.cursor = "not-allowed";
 }
-
-var uid = validateUid(new URLSearchParams(location.search).get("uid"));
-
-if (!uid){
-    keyEl.textContent = "НЕТ UID";
-    timerEl.textContent = "";
-    noteEl.textContent = "Открывай через кнопку GET KEY в игре — тогда в ссылке будет uid и ключ посчитается.";
-    disableCopy();
-} else {
-    var cached = loadCached(uid);
-    var issue, key, expireAt;
-    if (cached){
-        issue = cached.issue;
-        key = cached.key;
-        expireAt = cached.expireAt;
-    } else {
-        clearCached();
-        issue = nowSec();
-        key = "KEY-" + issue + "-" + keyBody(uid, issue);
-        expireAt = issue + LIFE;
-        saveCached(uid, key, issue, expireAt);
-    }
-    currentKeyText = key;
-    keyEl.textContent = key;
+function enableCopy(){
+    copyBtn.disabled = false;
+    copyBtn.style.opacity = "1";
+    copyBtn.style.cursor = "pointer";
+}
+function startTimer(expireAt){
+    stopTimer();
     var tick = function(){
         var left = expireAt - nowSec();
         if (left <= 0){
@@ -134,6 +118,63 @@ if (!uid){
     };
     tick();
     timerInterval = setInterval(tick, 1000);
+}
+function presentKey(key, expireAt){
+    currentKeyText = key;
+    keyEl.textContent = key;
+    enableCopy();
+    startTimer(expireAt);
+}
+function generateFor(uid){
+    var issue = nowSec();
+    var key = "KEY-" + issue + "-" + keyBody(uid, issue);
+    var expireAt = issue + LIFE;
+    saveCached(uid, key, issue, expireAt);
+    presentKey(key, expireAt);
+}
+
+var uid = validateUid(new URLSearchParams(location.search).get("uid"));
+
+if (uid){
+    var cached = loadCached(uid);
+    if (cached){
+        presentKey(cached.key, cached.expireAt);
+    } else {
+        clearCached();
+        generateFor(uid);
+    }
+} else {
+    keyEl.textContent = "НЕТ UID";
+    timerEl.textContent = "";
+    disableCopy();
+    var wrap = document.createElement("div");
+    wrap.style.marginTop = "14px";
+    var inp = document.createElement("input");
+    inp.placeholder = "вставь свой UID из окна игры";
+    inp.setAttribute("inputmode", "numeric");
+    var go = document.createElement("button");
+    go.textContent = "ПОКАЗАТЬ КЛЮЧ";
+    go.style.marginLeft = "6px";
+    go.addEventListener("click", function(){
+        var manual = validateUid(inp.value);
+        if (!manual){
+            noteEl.textContent = "UID кривой — скопируй цифрами из окна ключа в игре";
+            return;
+        }
+        var c = loadCached(manual);
+        if (c){
+            presentKey(c.key, c.expireAt);
+        } else {
+            clearCached();
+            generateFor(manual);
+        }
+        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+        noteEl.textContent = "Ключ посчитан для UID " + manual + ". Если хвост ссылки долетает сам — этот ввод не нужен.";
+    });
+    wrap.appendChild(inp);
+    wrap.appendChild(go);
+    noteEl.parentNode.insertBefore(wrap, noteEl);
+    noteEl.textContent = "Хвост ?uid= не долетел (или открыл напрямую) — вставь свой UID вручную, он написан в окне ключа в игре.";
 }
 
 function fallbackCopy(t){

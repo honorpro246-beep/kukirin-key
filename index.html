@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kukirin Key</title>
+<style>
+body{background:#180f24;color:#ebe4f5;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+.box{background:#241036;padding:32px;border-radius:14px;border:2px solid #ff8c3c;text-align:center;max-width:440px;width:90%}
+h1{color:#ffb478;font-size:20px;margin:0 0 10px}
+#key{font-size:24px;letter-spacing:2px;background:#100a18;padding:14px;border-radius:8px;margin:14px 0;word-break:break-all}
+button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer}
+small{color:#9488a8;display:block;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="box">
+<h1>KUKIRIN AUTOPILOT — KEY</h1>
+<div>Твой личный ключ на сегодня:</div>
+<div id="key">...</div>
+<button onclick="copyKey()">COPY KEY</button>
+<small id="note">Ключ живёт 24 часа и привязан к твоему UID. Скопируй и вставь в окно ключа в игре.</small>
+</div>
+<script>
+// !!! ЭТА СОЛЬ ДОЛЖНА СОВПАДАТЬ С SECRET_SALT В ЛОАДЕРЕ !!!
+var SALT = "Kukirin_2025_SALT!";
+
+function dayNum(){ return Math.floor(Date.now() / 86400000); }
+function hashOf(s){
+    var h = 0;
+    for (var i = 0; i < s.length; i++){
+        h = (h * 31 + s.charCodeAt(i)) % 100000000;
+    }
+    return h;
+}
+var uid = new URLSearchParams(location.search).get("uid");
+var el = document.getElementById("key");
+var note = document.getElementById("note");
+if (uid){
+    el.textContent = "KEY-" + hashOf(uid + "_" + dayNum() + "_" + SALT);
+} else {
+    el.textContent = "НЕТ UID";
+    note.textContent = "Открывай эту страницу через кнопку GET KEY в игре — тогда в ссылке будет твой uid и ключ посчитается.";
+}
+function copyKey(){
+    var t = el.textContent;
+    if (navigator.clipboard){ navigator.clipboard.writeText(t); }
+    else {
+        var ta = document.createElement("textarea");
+        ta.value = t; document.body.appendChild(ta);
+        ta.select(); document.execCommand("copy");
+        document.body.removeChild(ta);
+    }
+    note.textContent = "Скопировано: " + t;
+}
+</script>
+</body>
+</html>

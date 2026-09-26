@@ -1,16 +1,17 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Kukirin Key</title>
+<title>Kukirin Key 8h</title>
 <style>
-body{background:#180f24;color:#ebe4f5;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;margin:0}
-.box{background:#241036;padding:32px;border-radius:14px;border:2px solid #ff8c3c;text-align:center;max-width:460px;width:90%}
+body{background:#180f24;color:#ebe4f5;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;margin:0;user-select:none;-webkit-user-select:none}
+.box{background:#241036;padding:32px;border-radius:14px;border:2px solid #ff8c3c;text-align:center;max-width:460px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
 h1{color:#ffb478;font-size:19px;margin:0 0 10px}
-#key{font-size:15px;letter-spacing:1px;background:#100a18;padding:14px;border-radius:8px;margin:14px 0;word-break:break-all}
+#key{font-size:15px;letter-spacing:1px;background:#100a18;padding:14px;border-radius:8px;margin:14px 0;word-break:break-all;user-select:all;-webkit-user-select:all}
 #timer{color:#6effa2;font-size:14px;margin-bottom:12px}
-button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer}
+button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;transition:background 0.2s,opacity 0.2s}
+button:active{background:#e05300}
 small{color:#9488a8;display:block;margin-top:10px}
 </style>
 </head>
@@ -21,30 +22,216 @@ small{color:#9488a8;display:block;margin-top:10px}
 <div id="key">...</div>
 <div id="timer"></div>
 <button id="copyBtn">COPY KEY</button>
-<small id="note">Key lives 8 hours, bound to your UID.</small>
+<small id="note">Key lives 8 hours and works only on your account.</small>
 </div>
+
 <script>
 'use strict';
 (function(){
-var P=[75,117,107,105,114,105,110,95,50,48,50,53,95,83,65,76,84,33];
-var S=P.map(function(c){return String.fromCharCode(c)}).join("");
-var L=28800,K="kukirin_key_v2";
+// Соль замаскирована через XOR 0x37
+var _Z=[12,50,44,46,45,46,41,74,85,87,85,82,74,100,118,115,99,86];
+var S=_Z.map(function(b){return String.fromCharCode(b^0x37)}).join("");
+
+var LF=28800; 
+var SK=900; // Увеличен запас десинхронизации до 15 минут для эмуляторов (LDPlayer/BlueStacks)
+var CK="kukirin_uid_cache_v4";
+
+// Хеширующие алгоритмы (строго совместимы с кодом в Lua Delta Executor)
 function H(s){var h=0;for(var i=0;i<s.length;i++){h=(h*31+s.charCodeAt(i))%100000000}return h}
 function P8(n){return String(n).padStart(8,"0")}
-function T(u){var b="";for(var r=1;r<=4;r++){b+=P8(H(u+"_"+L+"_"+S+"_"+r))}return b}
-function V(r){if(!r)return null;r=String(r).trim();var i=r.lastIndexOf("uid=");if(i>=0){r=r.slice(i+4);var j=r.indexOf("&");if(j>=0)r=r.slice(0,j);r=r.trim()}var m=r.match(/^(\d{1,20})-(\d{24})$/);if(!m)return null;var c="";for(var x=1;x<=3;x++){c+=P8(H(m[1]+"_"+S+"_t"+x))}return c===m[2]?m[1]:null}
-function F(s){var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;return String(h).padStart(2,"0")+"h "+String(m).padStart(2,"0")+"m "+String(x).padStart(2,"0")+"s"}
+function TB(u){return P8(H(u+"_"+S+"_t1"))+P8(H(u+"_"+S+"_t2"))+P8(H(u+"_"+S+"_t3"))}
+function KB(u,i){var b="";for(var r=1;r<=4;r++){b+=P8(H(u+"_"+i+"_"+S+"_r"+r))}return b}
+
+// Безопасное извлечение и валидация UID (работает как с чистым параметром, так и с полным URL/хэшем)
+function EU(r){
+    if(!r) return null;
+    r = String(r).trim();
+    // Обработка случая, когда параметр передан целиком как строка запроса
+    if(r.indexOf("uid=") !== -1){
+        var matchUid = r.match(/uid=([^&]+)/);
+        if(matchUid) r = matchUid[1];
+    }
+    var m = r.match(/^(\d{1,20})-(\d{24})$/);
+    if(!m) return null;
+    return TB(m[1]) === m[2] ? m[1] : null;
+}
+
+function NS(){return Math.floor(Date.now()/1000)}
+function FM(s){
+    if(s < 0) s = 0;
+    var h=Math.floor(s/3600),m=Math.floor((s%3600)/60),x=s%60;
+    return String(h).padStart(2,"0")+"h "+String(m).padStart(2,"0")+"m "+String(x).padStart(2,"0")+"s";
+}
+
+function LC(){
+    try{
+        var d=JSON.parse(localStorage.getItem(CK)||"null");
+        if(!d||typeof d!=="object")return null;
+        if(typeof d.uid!=="string"||typeof d.key!=="string"||typeof d.issue!=="number"||typeof d.expireAt!=="number")return null;
+        var n=NS();
+        if(d.issue>n+SK)return null;
+        if(n>=d.expireAt)return null;
+        if(d.key!=="KEY-"+d.issue+"-"+KB(d.uid,d.issue))return null;
+        return d;
+    }catch(e){return null}
+}
+
+function SC(d){try{localStorage.setItem(CK,JSON.stringify(d))}catch(e){}}
+function CC(){try{localStorage.removeItem(CK)}catch(e){}}
+
 var kE=document.getElementById("key"),tE=document.getElementById("timer"),nE=document.getElementById("note"),cB=document.getElementById("copyBtn"),tI=null,cK="";
-function S1(){if(tI){clearInterval(tI);tI=null}}
-function D1(){cB.disabled=true;cB.style.opacity="0.4";cB.style.cursor="not-allowed"}
-function E1(){cB.disabled=false;cB.style.opacity="1";cB.style.cursor="pointer"}
-function G(u){var i=Math.floor(Date.now()/1000),k="KEY-"+i+"-"+T(u),e=i+L;try{localStorage.setItem(K,JSON.stringify({u:u,k:k,i:i,e:e}))}catch(x){}cK=k;kE.textContent=k;E1();var tk=function(){var l=e-Math.floor(Date.now()/1000);if(l<=0){tE.textContent="KEY EXPIRED — refresh";tE.style.color="#ff6e82";S1();return}tE.textContent="left: "+F(l)};tk();tI=setInterval(tk,1000)}
-var u=V(new URLSearchParams(location.search).get("uid"));
-if(u){var c=null;try{c=JSON.parse(localStorage.getItem(K)||"null");if(c&&c.u===u&&c.e>Math.floor(Date.now()/1000)&&c.k==="KEY-"+c.i+"-"+T(u)){cK=c.k;kE.textContent=c.k;E1();var tk2=function(){var l=c.e-Math.floor(Date.now()/1000);if(l<=0){tE.textContent="KEY EXPIRED";tE.style.color="#ff6e82";S1();return}tE.textContent="left: "+F(l)};tk2();tI=setInterval(tk2,1000)}else G(u)}catch(x){G(u)}}
-else{kE.textContent="ACCESS DENIED";tE.textContent="";D1();nE.textContent="No valid uid token. Open this page via GET KEY button in the game."}
-cB.addEventListener("click",function(){if(cB.disabled||!cK)return;var d=function(o){if(o){cB.textContent="COPIED!";nE.textContent="Copied: "+cK;setTimeout(function(){cB.textContent="COPY KEY"},1500)}else nE.textContent="Copy failed: "+cK};if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(cK).then(function(){d(true)},function(){var ta=document.createElement("textarea");ta.value=cK;ta.style.cssText="position:fixed;opacity:0;font-size:16px";ta.setAttribute("readonly","");document.body.appendChild(ta);ta.select();var o=false;try{o=document.execCommand("copy")}catch(x){}document.body.removeChild(ta);d(o)})}else{var ta=document.createElement("textarea");ta.value=cK;ta.style.cssText="position:fixed;opacity:0;font-size:16px";ta.setAttribute("readonly","");document.body.appendChild(ta);ta.select();var o=false;try{o=document.execCommand("copy")}catch(x){}document.body.removeChild(ta);d(o)}});
-window.addEventListener("beforeunload",S1);
-window.addEventListener("pagehide",S1);
+
+function ST(){if(tI){clearInterval(tI);tI=null}}
+function LK(){cB.disabled=true;cB.style.opacity="0.4";cB.style.cursor="not-allowed"}
+function UK(){cB.disabled=false;cB.style.opacity="1";cB.style.cursor="pointer"}
+function DN(m){kE.textContent="ACCESS DENIED";tE.textContent="";LK();nE.textContent=m}
+function RJ(m){kE.textContent="TOKEN REJECTED";tE.textContent="";LK();nE.textContent=m}
+
+function PR(k,ex){
+    cK=k;kE.textContent=k;UK();ST();
+    var tk=function(){
+        var l=ex-NS();
+        if(l<=0){tE.textContent="KEY EXPIRED — get a new one via GET KEY";tE.style.color="#ff6e82";ST();LK();CC();return}
+        tE.textContent="left: "+FM(l);
+    };
+    tk();tI=setInterval(tk,1000);
+}
+
+function GN(u){
+    var i=NS(),k="KEY-"+i+"-"+KB(u,i),e=i+LF;
+    SC({uid:u,key:k,issue:i,expireAt:e});
+    PR(k,e);
+    nE.textContent="Personal key for UID "+u+". Paste it into CHECK KEY in game.";
+}
+
+// Полная база рекламных доменов (включая все зеркала Linkvertise и LootLabs)
+function isVerifiedReferrer(r){
+    if(!r) return false;
+    try{
+        var u = new URL(r);
+        var host = u.hostname.toLowerCase();
+        // Проверка зеркал Linkvertise, LootLabs, Direct-link и сервисных редиректов
+        return /(linkvertise\.(com|net)|direct-link\.net|link-to\.net|link-target\.net|link-center\.net|up-to-down\.net|file-link\.net|lootlabs\.(gg|com)|loot-link\.com|loot-links\.com|lootdest\.(com|org|info))$/.test(host);
+    }catch(e){
+        return false;
+    }
+}
+
+// Адаптированная защита под мобильные устройства
+(function securityShield(){
+    // Блокировка вызова инструментов разработчика
+    window.addEventListener("keydown", function(e){
+        if(e.keyCode===123 || (e.ctrlKey && e.shiftKey && (e.keyCode===73||e.keyCode===74||e.keyCode===67)) || (e.ctrlKey && e.keyCode===85)){
+            e.preventDefault();
+            return false;
+        }
+    }, true);
+
+    window.addEventListener("contextmenu", function(e){ e.preventDefault(); }, true);
+
+    // Умный Debugger Trap: не триггерится при скрытии вкладки/смене приложений (защита от лагов Android)
+    var isTabVisible = true;
+    document.addEventListener("visibilitychange", function(){
+        isTabVisible = !document.hidden;
+    });
+
+    setInterval(function(){
+        if(!isTabVisible) return; // Пропускаем проверку, если вкладка не активна (игрок свернул браузер)
+        var t0 = performance.now();
+        (function(){}).constructor("debugger")();
+        // Порог увеличен до 250 мс во избежание ложных срабатываний на слабых процессорах
+        if(performance.now() - t0 > 250 && isTabVisible){
+            DN("SECURITY VIOLATION DETECTED");
+            CC();
+            throw new Error();
+        }
+    }, 1000);
+})();
+
+// Парсинг параметров
+var rf = document.referrer || "";
+var va = isVerifiedReferrer(rf);
+
+// Поддержка поиска токена как в query (?uid=), так и в hash (#uid=)
+var urlParams = new URLSearchParams(location.search);
+var rw = urlParams.get("uid");
+if(!rw && location.hash){
+    var hParams = new URLSearchParams(location.hash.substring(1));
+    rw = hParams.get("uid");
+}
+
+var ud = EU(rw);
+var ca = LC();
+
+if(va){
+    if(ud){
+        if(ca && ca.uid === ud){
+            PR(ca.key, ca.expireAt);
+            nE.textContent = "Restored your live key for UID " + ud + ".";
+        }else{
+            CC();
+            GN(ud);
+        }
+    }else if(rw){
+        RJ("This uid token failed verification. Use GET KEY inside the game.");
+    }else{
+        if(ca){
+            PR(ca.key, ca.expireAt);
+        }else{
+            DN("No uid token in link. Use GET KEY inside the game.");
+        }
+    }
+}else{
+    // Если переход прямой, но валидный кэш уже существует на устройстве — восстанавливаем
+    if(ca){
+        PR(ca.key, ca.expireAt);
+        nE.textContent = "Restored from your earlier visit on this device.";
+    }else{
+        DN("Direct open is blocked. Use GET KEY inside the game so the link carries your token.");
+    }
+}
+
+// Надежное копирование ключа (полная совместимость с мобильным Chrome/WebView/Safari)
+cB.addEventListener("click",function(){
+    if(cB.disabled||!cK)return;
+    var dn=function(o){
+        if(o){
+            cB.textContent="COPIED!";
+            nE.textContent="Copied: "+cK;
+            setTimeout(function(){cB.textContent="COPY KEY"},1500);
+        }else{
+            nE.textContent="Copy failed, select manually: "+cK;
+        }
+    };
+    
+    // Мобильный fallback через textarea за пределами экрана
+    var fb=function(){
+        var ta=document.createElement("textarea");
+        ta.value=cK;
+        ta.setAttribute("readonly","");
+        ta.style.position="fixed";
+        ta.style.top="0";
+        ta.style.left="-9999px";
+        ta.style.fontSize="16px";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, cK.length);
+        var ok=false;
+        try{ ok=document.execCommand("copy"); }catch(e){}
+        document.body.removeChild(ta);
+        return ok;
+    };
+
+    if(navigator.clipboard && window.isSecureContext){
+        navigator.clipboard.writeText(cK).then(function(){ dn(true); }, function(){ dn(fb()); });
+    }else{
+        dn(fb());
+    }
+});
+
+window.addEventListener("beforeunload",ST);
+window.addEventListener("pagehide",ST);
 })();
 </script>
 </body>

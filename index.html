@@ -6,44 +6,50 @@
 <title>Kukirin Key 8h</title>
 <style>
 body{background:#180f24;color:#ebe4f5;font-family:monospace;display:flex;align-items:center;justify-content:center;min-height:100vh;min-height:100dvh;margin:0;user-select:none;-webkit-user-select:none}
-.box{background:#241036;padding:32px;border-radius:14px;border:2px solid #ff8c3c;text-align:center;max-width:460px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
-h1{color:#ffb478;font-size:19px;margin:0 0 10px}
-#key{font-size:15px;letter-spacing:1px;background:#100a18;padding:14px;border-radius:8px;margin:14px 0;word-break:break-all;user-select:all;-webkit-user-select:all}
+.box{background:#241036;padding:28px 24px;border-radius:14px;border:2px solid #ff8c3c;text-align:center;max-width:440px;width:90%;box-shadow:0 10px 30px rgba(0,0,0,0.5)}
+h1{color:#ffb478;font-size:18px;margin:0 0 10px}
+#key{font-size:14px;letter-spacing:1px;background:#100a18;padding:12px;border-radius:8px;margin:12px 0;word-break:break-all;user-select:all;-webkit-user-select:all;color:#ffb478;border:1px dashed #ff8c3c}
 #timer{color:#6effa2;font-size:14px;margin-bottom:12px}
-button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer;transition:background 0.2s,opacity 0.2s}
+button{background:#ff5e00;color:#fff;border:0;padding:12px 24px;border-radius:8px;font-size:14px;font-weight:bold;cursor:pointer;transition:background 0.2s,opacity 0.2s}
 button:active{background:#e05300}
-small{color:#9488a8;display:block;margin-top:10px}
-.recovery-box{display:none;margin-top:15px}
-.recovery-box input{width:80%;padding:10px;background:#100a18;border:1px solid #ff8c3c;color:#fff;border-radius:6px;font-family:monospace;font-size:12px;margin-bottom:10px}
+small{color:#9488a8;display:block;margin-top:10px;font-size:12px}
+
+/* Блок ручной вставки если Linkvertise стер токен */
+#manualSection{margin-top:14px;background:#190c27;padding:14px;border-radius:8px;border:1px solid #4a286d}
+#manualInput{width:90%;padding:10px;background:#100a18;border:1px solid #ff8c3c;color:#ebe4f5;border-radius:6px;font-family:monospace;font-size:12px;outline:none;margin-bottom:10px;box-sizing:border-box}
+#manualBtn{background:#5078ff;padding:10px 20px;font-size:13px}
 </style>
 </head>
 <body>
 <div class="box">
 <h1>KUKIRIN AUTOPILOT — 8H KEY</h1>
-<div>Your personal key:</div>
-<div id="key">...</div>
-<div id="timer"></div>
-<button id="copyBtn">COPY KEY</button>
-<small id="note">Key lives 8 hours and works only on your account.</small>
+<div id="subTitle">Your personal key:</div>
 
-<!-- Блок ввода ссылки на случай, если Linkvertise стёр хвост URL -->
-<div id="recovery" class="recovery-box">
-    <input type="text" id="manualInput" placeholder="Paste your link from game here">
+<div id="key">WAITING FOR LINK...</div>
+<div id="timer"></div>
+
+<button id="copyBtn" style="display:none">COPY KEY</button>
+<small id="note">Loading key verification system...</small>
+
+<div id="manualSection" style="display:none">
+    <div style="font-size:12px;color:#ffb478;margin-bottom:8px">Linkvertise lost your token during redirect.</div>
+    <input type="text" id="manualInput" placeholder="Paste link from GET KEY button here">
     <br>
-    <button id="manualBtn" style="padding:8px 18px;font-size:13px">UNLOCK KEY</button>
+    <button id="manualBtn">UNLOCK 8H KEY</button>
 </div>
 </div>
 
 <script>
 'use strict';
 (function(){
-// Соль идентична Lua (Kukirin_2025_SALT!)
+// Соль идентична коду в Lua (Kukirin_2025_SALT!)
 var _Z = [12,50,44,46,45,46,41,74,85,87,85,82,74,100,118,115,99,86];
 var S = _Z.map(function(c){ return String.fromCharCode(c ^ 0x37); }).join("");
 
 var LF = 28800; // 8 часов
 var SK = 900;   // 15 минут запаса
 var CK = "kukirin_uid_cache_v4";
+var PK = "kukirin_pending_uid_v1";
 
 // Хеш-функции строго синхронизированы с игрой
 function H(s){
@@ -105,28 +111,29 @@ var kE = document.getElementById("key"),
     tE = document.getElementById("timer"),
     nE = document.getElementById("note"),
     cB = document.getElementById("copyBtn"),
-    recBox = document.getElementById("recovery"),
-    mInput = document.getElementById("manualInput"),
+    mSec = document.getElementById("manualSection"),
+    mInp = document.getElementById("manualInput"),
     mBtn = document.getElementById("manualBtn"),
     tI = null, cK = "";
 
 function ST(){ if(tI){ clearInterval(tI); tI = null; } }
-function LK(){ cB.disabled = true; cB.style.opacity = "0.4"; cB.style.cursor = "not-allowed"; }
-function UK(){ cB.disabled = false; cB.style.opacity = "1"; cB.style.cursor = "pointer"; }
-function DN(m){ kE.textContent = "ACCESS DENIED"; tE.textContent = ""; LK(); nE.textContent = m; }
-function RJ(m){ kE.textContent = "TOKEN REJECTED"; tE.textContent = ""; LK(); nE.textContent = m; }
 
 function PR(k, ex){
-    cK = k; kE.textContent = k; UK(); ST();
-    recBox.style.display = "none";
+    cK = k; 
+    kE.textContent = k; 
+    kE.style.border = "1px solid #6effa2";
+    kE.style.color = "#ebe4f5";
+    cB.style.display = "inline-block";
+    mSec.style.display = "none";
+    ST();
     var tk = function(){
         var l = ex - NS();
         if(l <= 0){
-            tE.textContent = "KEY EXPIRED — get a new one via GET KEY";
+            tE.textContent = "KEY EXPIRED — get a new one in Roblox";
             tE.style.color = "#ff6e82";
-            ST(); LK(); CC(); return;
+            ST(); cB.style.display = "none"; CC(); return;
         }
-        tE.textContent = "left: " + FM(l);
+        tE.textContent = "Time left: " + FM(l);
     };
     tk();
     tI = setInterval(tk, 1000);
@@ -136,17 +143,21 @@ function GN(u){
     var i = NS(), k = "KEY-" + i + "-" + KB(u, i), e = i + LF;
     SC({ uid: u, key: k, issue: i, expireAt: e });
     PR(k, e);
-    nE.textContent = "Personal key for UID " + u + ". Paste it into CHECK KEY in game.";
+    nE.textContent = "Key for UID " + u + " generated! Paste into CHECK KEY in game.";
+    try{ localStorage.removeItem(PK); }catch(e){}
 }
 
-// Защита от хоткеев DevTools на ПК
-window.addEventListener("keydown", function(e){
-    if(e.keyCode === 123 || (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) || (e.ctrlKey && e.keyCode === 85)){
-        e.preventDefault(); return false;
-    }
-}, true);
+function showManual(msg){
+    kE.textContent = "TOKEN REQUIRED";
+    kE.style.border = "1px dashed #ff8c3c";
+    kE.style.color = "#ffb478";
+    tE.textContent = "";
+    cB.style.display = "none";
+    mSec.style.display = "block";
+    nE.textContent = msg || "Paste the link copied from the game to get your key.";
+}
 
-// Получение токена из параметров ссылки или хеша
+// 1. Проверяем URL (?uid= или #uid=)
 var urlParams = new URLSearchParams(location.search);
 var rw = urlParams.get("uid");
 if(!rw && location.hash){
@@ -157,52 +168,53 @@ if(!rw && location.hash){
 var ud = EU(rw);
 var ca = LC();
 
-// ГЛАВНАЯ ЛОГИКА: если токен корректен — выдаем ключ сразу
+// Если токен был в ссылке — сохраняем его в память
+if(ud){
+    try{ localStorage.setItem(PK, ud); }catch(e){}
+}else{
+    // Если токен срезан Linkvertise, проверяем, не сохранен ли он с прошлого шага
+    try{ ud = localStorage.getItem(PK); }catch(e){}
+}
+
+// 2. Логика выдачи ключа
 if(ud){
     if(ca && ca.uid === ud){
         PR(ca.key, ca.expireAt);
-        nE.textContent = "Restored your live key for UID " + ud + ".";
+        nE.textContent = "Restored your live 8h key for UID " + ud + ".";
     }else{
         CC();
         GN(ud);
     }
-}else if(rw){
-    // Токен был в ссылке, но сигнатура не сошлась
-    RJ("This UID token failed verification. Make sure you used GET KEY in game.");
 }else{
-    // Если токена в адресной строке нет:
     if(ca){
         PR(ca.key, ca.expireAt);
-        nE.textContent = "Restored from your earlier visit on this device.";
+        nE.textContent = "Restored your active session on this device.";
     }else{
-        // Показываем блок ввода, чтобы игрок не застрял
-        DN("Token missing after redirect. Paste your GET KEY link below:");
-        recBox.style.display = "block";
+        showManual("Paste the GET KEY link below to unlock:");
     }
 }
 
-// Ручная разблокировка, если Linkvertise стёр параметры
+// Кнопка разблокировки по ссылке из буфера
 mBtn.addEventListener("click", function(){
-    var val = mInput.value.trim();
-    var manualUid = EU(val);
-    if(manualUid){
+    var val = mInp.value.trim();
+    var parsedUid = EU(val);
+    if(parsedUid){
         CC();
-        GN(manualUid);
+        GN(parsedUid);
     }else{
-        alert("Invalid link or token! Use GET KEY button in Roblox.");
+        alert("Invalid link! Copy the link using GET KEY inside the Roblox game.");
     }
 });
 
-// Надежное копирование на мобильных устройствах
+// Кнопка копирования ключа
 cB.addEventListener("click", function(){
-    if(cB.disabled || !cK) return;
+    if(!cK) return;
     var dn = function(o){
         if(o){
             cB.textContent = "COPIED!";
-            nE.textContent = "Copied: " + cK;
             setTimeout(function(){ cB.textContent = "COPY KEY"; }, 1500);
         }else{
-            nE.textContent = "Copy failed, select manually: " + cK;
+            alert("Copy failed. Please select the key manually.");
         }
     };
     
@@ -213,11 +225,9 @@ cB.addEventListener("click", function(){
         ta.style.position = "fixed";
         ta.style.top = "0";
         ta.style.left = "-9999px";
-        ta.style.fontSize = "16px";
         document.body.appendChild(ta);
         ta.focus();
         ta.select();
-        ta.setSelectionRange(0, cK.length);
         var ok = false;
         try{ ok = document.execCommand("copy"); }catch(e){}
         document.body.removeChild(ta);

@@ -12,17 +12,16 @@ h1{color:#ffb478;font-size:19px;margin:0 0 10px}
 #timer{color:#6effa2;font-size:14px;margin-bottom:12px}
 button{background:#ff5e00;color:#fff;border:0;padding:12px 26px;border-radius:8px;font-size:15px;font-weight:bold;cursor:pointer}
 small{color:#9488a8;display:block;margin-top:10px}
-input{width:70%;padding:10px;border-radius:8px;border:0;background:#100a18;color:#ebe4f5;font-family:monospace;font-size:16px}
 </style>
 </head>
 <body>
 <div class="box">
-<h1>KUKIRIN AUTOPILOT — KEY 8H</h1>
-<div>Твой личный ключ:</div>
+<h1>KUKIRIN AUTOPILOT — 8H KEY</h1>
+<div>Your personal key:</div>
 <div id="key">...</div>
 <div id="timer"></div>
 <button id="copyBtn">COPY KEY</button>
-<small id="note">Ключ живёт 8 часов с момента открытия этой страницы и привязан к твоему UID.</small>
+<small id="note">Key lives 8 hours from issue and is bound to your UID.</small>
 </div>
 <script>
 'use strict';
@@ -40,24 +39,39 @@ function hashOf(s){
     }
     return h;
 }
-function keyBody(uid, issue){
+function pad8(n){ return String(n).padStart(8, "0"); }
+
+function tokenBody(uidStr){
+    return pad8(hashOf(uidStr + "_" + SALT + "_t1")) +
+           pad8(hashOf(uidStr + "_" + SALT + "_t2")) +
+           pad8(hashOf(uidStr + "_" + SALT + "_t3"));
+}
+function extractUid(raw){
+    if (!raw) return null;
+    raw = String(raw).trim();
+    var i = raw.lastIndexOf("uid=");
+    if (i >= 0){
+        raw = raw.slice(i + 4);
+        var j = raw.indexOf("&");
+        if (j >= 0) raw = raw.slice(0, j);
+        raw = raw.trim();
+    }
+    var m = raw.match(/^(\d{1,20})-(\d{24})$/);
+    if (!m) return null;
+    if (tokenBody(m[1]) !== m[2]) return null;
+    return m[1];
+}
+function keyBody(uidStr, issue){
     var b = "";
     for (var r = 1; r <= 4; r++){
-        b += String(hashOf(uid + "_" + issue + "_" + SALT + "_" + r)).padStart(8, "0");
+        b += pad8(hashOf(uidStr + "_" + issue + "_" + SALT + "_" + r));
     }
     return b;
-}
-function validateUid(uid){
-    if (!uid) return null;
-    uid = String(uid).trim();
-    if (uid.length === 0 || uid.length > 32) return null;
-    if (!/^[a-zA-Z0-9_-]+$/.test(uid)) return null;
-    return uid;
 }
 function nowSec(){ return Math.floor(Date.now() / 1000); }
 function formatTime(sec){
     var h = Math.floor(sec / 3600), m = Math.floor((sec % 3600) / 60), s = sec % 60;
-    return String(h).padStart(2,"0") + "ч " + String(m).padStart(2,"0") + "м " + String(s).padStart(2,"0") + "с";
+    return String(h).padStart(2,"0") + "h " + String(m).padStart(2,"0") + "m " + String(s).padStart(2,"0") + "s";
 }
 
 function loadCached(uid){
@@ -91,30 +105,20 @@ var copyBtn = document.getElementById("copyBtn");
 var timerInterval = null;
 var currentKeyText = "";
 
-function stopTimer(){
-    if (timerInterval){ clearInterval(timerInterval); timerInterval = null; }
-}
-function disableCopy(){
-    copyBtn.disabled = true;
-    copyBtn.style.opacity = "0.4";
-    copyBtn.style.cursor = "not-allowed";
-}
-function enableCopy(){
-    copyBtn.disabled = false;
-    copyBtn.style.opacity = "1";
-    copyBtn.style.cursor = "pointer";
-}
+function stopTimer(){ if (timerInterval){ clearInterval(timerInterval); timerInterval = null; } }
+function disableCopy(){ copyBtn.disabled = true; copyBtn.style.opacity = "0.4"; copyBtn.style.cursor = "not-allowed"; }
+function enableCopy(){ copyBtn.disabled = false; copyBtn.style.opacity = "1"; copyBtn.style.cursor = "pointer"; }
 function startTimer(expireAt){
     stopTimer();
     var tick = function(){
         var left = expireAt - nowSec();
         if (left <= 0){
-            timerEl.textContent = "КЛЮЧ МЁРТВ — обнови страницу для нового";
+            timerEl.textContent = "KEY EXPIRED — refresh for a new one";
             timerEl.style.color = "#ff6e82";
             stopTimer();
             return;
         }
-        timerEl.textContent = "осталось: " + formatTime(left);
+        timerEl.textContent = "left: " + formatTime(left);
     };
     tick();
     timerInterval = setInterval(tick, 1000);
@@ -133,7 +137,8 @@ function generateFor(uid){
     presentKey(key, expireAt);
 }
 
-var uid = validateUid(new URLSearchParams(location.search).get("uid"));
+var rawParam = new URLSearchParams(location.search).get("uid");
+var uid = extractUid(rawParam);
 
 if (uid){
     var cached = loadCached(uid);
@@ -143,38 +148,16 @@ if (uid){
         clearCached();
         generateFor(uid);
     }
-} else {
-    keyEl.textContent = "НЕТ UID";
+} else if (rawParam){
+    keyEl.textContent = "TOKEN REJECTED";
     timerEl.textContent = "";
     disableCopy();
-    var wrap = document.createElement("div");
-    wrap.style.marginTop = "14px";
-    var inp = document.createElement("input");
-    inp.placeholder = "вставь свой UID из окна игры";
-    inp.setAttribute("inputmode", "numeric");
-    var go = document.createElement("button");
-    go.textContent = "ПОКАЗАТЬ КЛЮЧ";
-    go.style.marginLeft = "6px";
-    go.addEventListener("click", function(){
-        var manual = validateUid(inp.value);
-        if (!manual){
-            noteEl.textContent = "UID кривой — скопируй цифрами из окна ключа в игре";
-            return;
-        }
-        var c = loadCached(manual);
-        if (c){
-            presentKey(c.key, c.expireAt);
-        } else {
-            clearCached();
-            generateFor(manual);
-        }
-        if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
-        noteEl.textContent = "Ключ посчитан для UID " + manual + ". Если хвост ссылки долетает сам — этот ввод не нужен.";
-    });
-    wrap.appendChild(inp);
-    wrap.appendChild(go);
-    noteEl.parentNode.insertBefore(wrap, noteEl);
-    noteEl.textContent = "Хвост ?uid= не долетел (или открыл напрямую) — вставь свой UID вручную, он написан в окне ключа в игре.";
+    noteEl.textContent = "This uid token failed verification. Use GET KEY inside the game to get a valid link.";
+} else {
+    keyEl.textContent = "ACCESS DENIED";
+    timerEl.textContent = "";
+    disableCopy();
+    noteEl.textContent = "No uid token in the link. Open this page via GET KEY button inside the game — the loader puts your personal token into the link.";
 }
 
 function fallbackCopy(t){
@@ -199,11 +182,11 @@ copyBtn.addEventListener("click", function(){
     if (!t || t === "...") return;
     var done = function(ok){
         if (ok){
-            copyBtn.textContent = "СКОПИРОВАНО!";
-            noteEl.textContent = "Скопировано: " + t;
+            copyBtn.textContent = "COPIED!";
+            noteEl.textContent = "Copied: " + t;
             setTimeout(function(){ copyBtn.textContent = "COPY KEY"; }, 1500);
         } else {
-            noteEl.textContent = "Ошибка копирования, выдели текст вручную: " + t;
+            noteEl.textContent = "Copy failed, select manually: " + t;
         }
     };
     if (navigator.clipboard && navigator.clipboard.writeText){
